@@ -1,3 +1,4 @@
+
 import Image from 'next/image';
 import Link from 'next/link';
 import SidebarWidget from '@/components/SidebarWidget';
@@ -10,6 +11,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import ClientOnly from '@/components/ClientOnly';
 
 const blogArchive = [
   { year: "2023", months: ["December (1)", "November (2)", "October (3)"] },
@@ -40,9 +42,11 @@ export default function RightSidebar() {
       <SidebarWidget title="Search This Blog">
         <div className="flex space-x-2">
           <Input type="text" placeholder="Search..." className="flex-grow" />
-          <Button variant="outline" size="icon">
-            <Search className="h-4 w-4" />
-          </Button>
+          <ClientOnly>
+            <Button variant="outline" size="icon" aria-label="Search blog posts">
+              <Search className="h-4 w-4" />
+            </Button>
+          </ClientOnly>
         </div>
       </SidebarWidget>
 
