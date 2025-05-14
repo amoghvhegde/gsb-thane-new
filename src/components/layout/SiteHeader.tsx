@@ -2,12 +2,14 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu } from 'lucide-react';
+import * as SheetPrimitive from '@radix-ui/react-dialog'; // Changed from @radix-ui/react-sheet
 
 const navItems = [
   { label: 'Home', href: '/' },
   { label: 'About Us', href: '/about-us' },
   { label: 'Committee Members', href: '/committee-members' },
   { label: 'Events', href: '/events' },
+  { label: 'Seva/Pooja Booking', href: '/seva-pooja-booking' },
   { label: 'Membership', href: '/membership' },
   { label: 'Contact Us', href: '/contact-us' },
   { label: 'Gallery', href: '/gallery' },
@@ -50,15 +52,18 @@ export default function SiteHeader() {
             </SheetTrigger>
             <SheetContent side="right">
               <nav className="flex flex-col space-y-4 mt-8">
-                {navItems.map((item) => (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    className="text-lg text-foreground hover:text-accent transition-colors"
-                  >
-                    {item.label}
-                  </Link>
-                ))}
+                {navItems.map((item) => {
+                  return (
+                    <SheetPrimitive.Close key={item.label} asChild>
+                      <Link
+                        href={item.href}
+                        className="text-lg text-foreground hover:text-accent transition-colors"
+                      >
+                        {item.label}
+                      </Link>
+                    </SheetPrimitive.Close>
+                  );
+                })}
               </nav>
             </SheetContent>
           </Sheet>
