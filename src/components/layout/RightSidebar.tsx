@@ -78,9 +78,11 @@ export default function RightSidebar() {
       <SidebarWidget title="Follow by Email">
         <div className="flex space-x-2">
           <Input type="email" placeholder="Email address..." className="flex-grow" />
-          <Button variant="default">
-            <Mail className="h-4 w-4 mr-2" /> Submit
-          </Button>
+          <ClientOnly>
+            <Button variant="default">
+              <Mail className="h-4 w-4 mr-2" /> Submit
+            </Button>
+          </ClientOnly>
         </div>
       </SidebarWidget>
       
