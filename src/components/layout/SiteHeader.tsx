@@ -1,8 +1,9 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu } from 'lucide-react';
-import * as SheetPrimitive from '@radix-ui/react-dialog'; // Changed from @radix-ui/react-sheet
+import * as SheetPrimitive from '@radix-ui/react-dialog';
 
 const navItems = [
   { label: 'Home', href: '/' },
@@ -20,12 +21,23 @@ export default function SiteHeader() {
     <header className="bg-background shadow-md">
       <div className="container mx-auto px-4 py-6">
         <div className="text-center lg:text-left mb-4">
-          <h1 className="text-4xl lg:text-5xl font-bold text-primary">
-            <Link href="/">GSB Mandal Thane</Link>
-          </h1>
-          <p className="text-muted-foreground mt-1 text-sm lg:text-base">
-            || श्री गणेशाय नमः || श्री कुलस्वामिनी प्रसन्न ||
-          </p>
+          <Link href="/" className="inline-flex flex-col sm:flex-row items-center justify-center lg:justify-start space-x-0 sm:space-x-4 group">
+            <Image 
+              src="/logo.png" 
+              alt="GSB Mandal Thane Logo" 
+              width={60} 
+              height={60} 
+              className="rounded-full mb-2 sm:mb-0"
+            />
+            <div>
+              <h1 className="text-4xl lg:text-5xl font-bold text-primary group-hover:text-accent transition-colors">
+                GSB Mandal Thane
+              </h1>
+              <p className="text-muted-foreground mt-1 text-sm lg:text-base">
+                || श्री गणेशाय नमः || श्री कुलस्वामिनी प्रसन्न ||
+              </p>
+            </div>
+          </Link>
         </div>
         
         {/* Desktop Navigation */}
@@ -42,7 +54,7 @@ export default function SiteHeader() {
         </nav>
 
         {/* Mobile Navigation */}
-        <div className="lg:hidden flex justify-end -mt-12">
+        <div className="lg:hidden flex justify-end -mt-16 sm:-mt-20"> {/* Adjusted margin for mobile */}
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon">
