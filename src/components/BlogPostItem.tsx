@@ -1,8 +1,12 @@
+
+'use client';
+
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mail, MessageCircle, Twitter, Facebook, CalendarDays, UserCircle } from 'lucide-react';
+import { Mail, MessageCircle, Twitter, Facebook, CalendarDays, UserCircle, ThumbsUp, ThumbsDown } from 'lucide-react';
 
 interface BlogPostItemProps {
   title: string;
@@ -15,6 +19,19 @@ interface BlogPostItemProps {
 }
 
 export default function BlogPostItem({ title, date, author, contentHtml, imageUrl, imageHint, videoUrl }: BlogPostItemProps) {
+  const [upvotes, setUpvotes] = useState(0);
+  const [downvotes, setDownvotes] = useState(0);
+
+  const handleUpvote = () => {
+    setUpvotes(prevUpvotes => prevUpvotes + 1);
+    // In a real app, you'd likely send this to a backend
+  };
+
+  const handleDownvote = () => {
+    setDownvotes(prevDownvotes => prevDownvotes + 1);
+    // In a real app, you'd likely send this to a backend
+  };
+
   return (
     <Card className="mb-8 shadow-lg">
       <CardHeader className="pb-3">
@@ -58,11 +75,23 @@ export default function BlogPostItem({ title, date, author, contentHtml, imageUr
         />
       </CardContent>
       <CardFooter className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground border-t pt-4">
-        <div className="flex items-center space-x-1">
-          <MessageCircle className="h-4 w-4" />
-          <Link href="#" className="hover:underline">0 Comments</Link>
+        <div className="flex items-center space-x-4"> {/* Comments and Votes */}
+          <div className="flex items-center space-x-1">
+            <MessageCircle className="h-4 w-4" />
+            <Link href="#" className="hover:underline">0 Comments</Link>
+          </div>
+          <div className="flex items-center space-x-1">
+            <Button variant="ghost" size="sm" className="text-xs p-1 h-auto" onClick={handleUpvote} aria-label="Upvote post">
+              <ThumbsUp className="h-3 w-3 mr-1" /> {upvotes}
+            </Button>
+          </div>
+          <div className="flex items-center space-x-1">
+            <Button variant="ghost" size="sm" className="text-xs p-1 h-auto" onClick={handleDownvote} aria-label="Downvote post">
+              <ThumbsDown className="h-3 w-3 mr-1" /> {downvotes}
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2"> {/* Share Buttons */}
           <Button variant="ghost" size="sm" className="text-xs p-1 h-auto">
             <Mail className="h-3 w-3 mr-1" /> Email This
           </Button>
