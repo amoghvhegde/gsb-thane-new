@@ -4,9 +4,9 @@
 import type * as React from 'react';
 import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { format, parse } from 'date-fns';
+import { format } from 'date-fns';
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,7 +27,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
@@ -42,7 +41,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
+import { useToast } from "@/hooks/use-toast";
+import { submitMembershipApplication } from '@/actions/membership-application';
 
 const membershipBenefits = [
   "Active participation in religious and cultural events.",
@@ -85,10 +85,13 @@ const formSchema = z.object({
 });
 
 
-type FormData = z.infer<typeof formSchema>;
+export type MembershipFormData = z.infer<typeof formSchema>;
 
 export default function MembershipPage() {
-  const form = useForm<FormData>({
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const form = useForm<MembershipFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       firstName: "",
@@ -100,7 +103,7 @@ export default function MembershipPage() {
       email: "",
       occupation: "",
       qualification: "",
-      numChildren: "",
+      numChildren: "", // Keep as string for input, server action will parse if needed
       gotra: "",
       kuladevata: "",
       nativePlace: "",
@@ -110,14 +113,38 @@ export default function MembershipPage() {
     },
   });
 
-  const onSubmit = (data: FormData) => {
-    console.log({
+  const onSubmit = async (data: MembershipFormData) => {
+    setIsSubmitting(true);
+    const dataToSubmit = {
         ...data,
-        dateOfBirth: data.dateOfBirth ? format(data.dateOfBirth, 'dd-MM-yyyy') : null,
-    });
-    // Placeholder for actual submission logic
-    alert("Form submitted (placeholder - no actual submission). Check console for data.");
-    form.reset();
+        dateOfBirth: format(data.dateOfBirth, 'dd-MM-yyyy'), // Format date for submission
+        numChildren: data.numChildren ? parseInt(data.numChildren, 10) : undefined,
+    };
+
+    try {
+      const result = await submitMembershipApplication(dataToSubmit);
+      if (result.success) {
+        toast({
+          title: "Application Submitted!",
+          description: "Your membership application has been received.",
+        });
+        form.reset(); // Reset form fields
+      } else {
+        toast({
+          title: "Submission Failed",
+          description: result.message || "An error occurred. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+       toast({
+        title: "Submission Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   const maritalStatus = form.watch("maritalStatus");
@@ -159,7 +186,7 @@ export default function MembershipPage() {
                     <FormItem>
                       <FormLabel>First Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter first name" {...field} />
+                        <Input placeholder="Enter first name" {...field} disabled={isSubmitting} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -172,7 +199,7 @@ export default function MembershipPage() {
                     <FormItem>
                       <FormLabel>Middle Name (Optional)</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter middle name" {...field} />
+                        <Input placeholder="Enter middle name" {...field} disabled={isSubmitting} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -185,7 +212,7 @@ export default function MembershipPage() {
                     <FormItem>
                       <FormLabel>Surname</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter surname" {...field} />
+                        <Input placeholder="Enter surname" {...field} disabled={isSubmitting} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -204,6 +231,7 @@ export default function MembershipPage() {
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                         className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4"
+                        disabled={isSubmitting}
                       >
                         <FormItem className="flex items-center space-x-3 space-y-0">
                           <FormControl>
@@ -231,7 +259,7 @@ export default function MembershipPage() {
                   <FormItem>
                     <FormLabel>Postal Address</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Enter full postal address" {...field} />
+                      <Textarea placeholder="Enter full postal address" {...field} disabled={isSubmitting} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -246,7 +274,7 @@ export default function MembershipPage() {
                     <FormItem>
                       <FormLabel>Pin Code</FormLabel>
                       <FormControl>
-                        <Input type="text" maxLength={6} placeholder="Enter 6-digit pin code" {...field} />
+                        <Input type="text" maxLength={6} placeholder="Enter 6-digit pin code" {...field} disabled={isSubmitting} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -259,7 +287,7 @@ export default function MembershipPage() {
                     <FormItem>
                       <FormLabel>Mobile No.</FormLabel>
                       <FormControl>
-                        <Input type="tel" maxLength={10} placeholder="Enter 10-digit mobile number" {...field} />
+                        <Input type="tel" maxLength={10} placeholder="Enter 10-digit mobile number" {...field} disabled={isSubmitting} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -275,7 +303,7 @@ export default function MembershipPage() {
                     <FormItem>
                       <FormLabel>Email (ALL CAPS will be applied)</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="you@example.com" {...field} />
+                        <Input type="email" placeholder="you@example.com" {...field} onChange={(e) => field.onChange(e.target.value.toUpperCase())} disabled={isSubmitting} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -296,6 +324,7 @@ export default function MembershipPage() {
                                 "w-full justify-start text-left font-normal",
                                 !field.value && "text-muted-foreground"
                               )}
+                              disabled={isSubmitting}
                             >
                               <CalendarIcon className="mr-2 h-4 w-4" />
                               {field.value ? format(field.value, "dd-MM-yyyy") : <span>Pick a date</span>}
@@ -331,7 +360,7 @@ export default function MembershipPage() {
                     <FormItem>
                       <FormLabel>Occupation</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter occupation" {...field} />
+                        <Input placeholder="Enter occupation" {...field} disabled={isSubmitting} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -344,7 +373,7 @@ export default function MembershipPage() {
                     <FormItem>
                       <FormLabel>Qualification</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter qualification" {...field} />
+                        <Input placeholder="Enter qualification" {...field} disabled={isSubmitting} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -364,6 +393,7 @@ export default function MembershipPage() {
                           onValueChange={field.onChange}
                           defaultValue={field.value}
                           className="flex space-x-4"
+                          disabled={isSubmitting}
                         >
                           <FormItem className="flex items-center space-x-3 space-y-0">
                             <FormControl>
@@ -391,7 +421,7 @@ export default function MembershipPage() {
                       <FormItem>
                         <FormLabel>Number of Children (if married)</FormLabel>
                         <FormControl>
-                          <Input type="number" min="0" placeholder="Enter number of children" {...field} />
+                          <Input type="number" min="0" placeholder="Enter number of children" {...field} disabled={isSubmitting} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -408,7 +438,7 @@ export default function MembershipPage() {
                     <FormItem>
                       <FormLabel>Gotra</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter Gotra" {...field} />
+                        <Input placeholder="Enter Gotra" {...field} disabled={isSubmitting} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -421,7 +451,7 @@ export default function MembershipPage() {
                     <FormItem>
                       <FormLabel>Kuladevata</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter Kuladevata" {...field} />
+                        <Input placeholder="Enter Kuladevata" {...field} disabled={isSubmitting} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -436,7 +466,7 @@ export default function MembershipPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Math</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select Math" />
@@ -459,7 +489,7 @@ export default function MembershipPage() {
                     <FormItem>
                       <FormLabel>Native Place</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter native place" {...field} />
+                        <Input placeholder="Enter native place" {...field} disabled={isSubmitting} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -474,7 +504,7 @@ export default function MembershipPage() {
                   <FormItem>
                     <FormLabel>Other GSB institutions you are a member of (if any)</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Mention other GSB institutions" {...field} />
+                      <Textarea placeholder="Mention other GSB institutions" {...field} disabled={isSubmitting} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -492,6 +522,7 @@ export default function MembershipPage() {
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                         className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4"
+                        disabled={isSubmitting}
                       >
                         <FormItem className="flex items-center space-x-3 space-y-0">
                           <FormControl>
@@ -519,7 +550,7 @@ export default function MembershipPage() {
                   <FormItem>
                     <FormLabel>Introducer's Name (Optional)</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter introducer's name" {...field} />
+                      <Input placeholder="Enter introducer's name" {...field} disabled={isSubmitting} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -532,7 +563,7 @@ export default function MembershipPage() {
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow">
                     <FormControl>
-                      <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                      <Checkbox checked={field.value} onCheckedChange={field.onChange} disabled={isSubmitting} />
                     </FormControl>
                     <div className="space-y-1 leading-none">
                       <FormLabel>Declaration</FormLabel>
@@ -546,7 +577,9 @@ export default function MembershipPage() {
               />
 
               <CardFooter className="flex-col items-start p-0 pt-6">
-                <Button type="submit" size="lg">Submit Application</Button>
+                <Button type="submit" size="lg" disabled={isSubmitting}>
+                  {isSubmitting ? 'Submitting...' : 'Submit Application'}
+                </Button>
                 <p className="text-sm text-muted-foreground mt-4">
                   <strong>Note:</strong> The mode of payment for the membership fee (Cheque or Online) will be communicated after your application is provisionally approved.
                   Membership shall be considered as confirmed, only after the payment receipt is issued by the Mandal.
@@ -559,5 +592,3 @@ export default function MembershipPage() {
     </div>
   );
 }
-
-    

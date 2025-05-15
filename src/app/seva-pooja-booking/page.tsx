@@ -6,9 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { submitSevaBooking } from '@/actions/seva-booking';
 
 interface PoojaOption {
   id: number;
@@ -24,6 +25,7 @@ const poojaOptions: PoojaOption[] = [
 ];
 
 export default function SevaBookingPage() {
+  const { toast } = useToast();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -32,6 +34,7 @@ export default function SevaBookingPage() {
   const [selectedPoojaIds, setSelectedPoojaIds] = useState<number[]>([]);
   const [panNumber, setPanNumber] = useState('');
   const [donationAmount, setDonationAmount] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
 
   const handlePoojaSelection = (poojaId: number) => {
@@ -47,10 +50,11 @@ export default function SevaBookingPage() {
     return total + (pooja ? pooja.price : 0);
   }, 0);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Handle form submission logic here
-    console.log({
+    setIsSubmitting(true);
+    
+    const formData = {
       firstName,
       lastName,
       email,
@@ -58,11 +62,42 @@ export default function SevaBookingPage() {
       address,
       selectedPoojaIds,
       panNumber,
-      donationAmount,
+      donationAmount: donationAmount ? parseFloat(donationAmount) : 0,
       totalPoojaPrice,
-    });
-    // Placeholder for actual submission
-    alert('Booking submitted (this is a placeholder). Check console for data.');
+    };
+
+    try {
+      const result = await submitSevaBooking(formData);
+      if (result.success) {
+        toast({
+          title: "Booking Submitted Successfully!",
+          description: "Thank you for your booking. We will contact you shortly.",
+        });
+        // Reset form
+        setFirstName('');
+        setLastName('');
+        setEmail('');
+        setPhone('');
+        setAddress('');
+        setSelectedPoojaIds([]);
+        setPanNumber('');
+        setDonationAmount('');
+      } else {
+        toast({
+          title: "Submission Failed",
+          description: result.message || "An error occurred. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Submission Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -88,6 +123,7 @@ export default function SevaBookingPage() {
                   required
                   placeholder="Enter your first name"
                   className="mt-1"
+                  disabled={isSubmitting}
                 />
               </div>
               <div>
@@ -100,6 +136,7 @@ export default function SevaBookingPage() {
                   required
                   placeholder="Enter your last name"
                   className="mt-1"
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -114,6 +151,7 @@ export default function SevaBookingPage() {
                 required
                 placeholder="you@example.com"
                 className="mt-1"
+                disabled={isSubmitting}
               />
             </div>
             
@@ -127,6 +165,7 @@ export default function SevaBookingPage() {
                 required
                 placeholder="e.g., 9876543210"
                 className="mt-1"
+                disabled={isSubmitting}
               />
             </div>
             
@@ -140,6 +179,7 @@ export default function SevaBookingPage() {
                 placeholder="Enter your complete postal address"
                 rows={3}
                 className="mt-1"
+                disabled={isSubmitting}
               />
             </div>
 
@@ -157,6 +197,7 @@ export default function SevaBookingPage() {
                         checked={selectedPoojaIds.includes(option.id)}
                         onCheckedChange={() => handlePoojaSelection(option.id)}
                         className="h-5 w-5"
+                        disabled={isSubmitting}
                       />
                       <Label htmlFor={`pooja-${option.id}`} className="text-sm font-normal flex-grow cursor-pointer">
                         {option.name} - <span className="font-medium text-primary">₹{option.price.toFixed(2)}</span>
@@ -187,6 +228,7 @@ export default function SevaBookingPage() {
                   placeholder="e.g., 501"
                   className="mt-1"
                   min="0"
+                  disabled={isSubmitting}
                 />
               </CardContent>
             </Card>
@@ -197,19 +239,20 @@ export default function SevaBookingPage() {
                 id="panNumber"
                 type="text"
                 value={panNumber}
-                onChange={(e) => setPanNumber(e.target.value)}
+                onChange={(e) => setPanNumber(e.target.value.toUpperCase())}
                 placeholder="Enter your PAN number"
                 className="mt-1"
                 pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}"
                 title="Please enter a valid PAN number (e.g., ABCDE1234F)"
+                disabled={isSubmitting}
               />
                <p className="text-xs text-muted-foreground mt-1">
                 Please provide your PAN for donations to avail tax benefits under section 80G of the Income Tax Act.
               </p>
             </div>
 
-            <Button type="submit" size="lg" className="w-full">
-              Proceed to Payment (Placeholder)
+            <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Submitting...' : 'Proceed to Payment (Placeholder)'}
             </Button>
             
             <CardFooter className="text-sm text-muted-foreground pt-6">
@@ -225,3 +268,4 @@ export default function SevaBookingPage() {
     </div>
   );
 }
+
