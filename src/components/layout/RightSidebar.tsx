@@ -40,14 +40,14 @@ export default function RightSidebar() {
       </SidebarWidget>
 
       <SidebarWidget title="Search This Blog">
-        <div className="flex space-x-2">
-          <Input type="text" placeholder="Search..." className="flex-grow" />
-          <ClientOnly>
+        <ClientOnly>
+          <div className="flex space-x-2">
+            <Input type="text" placeholder="Search..." className="flex-grow" />
             <Button variant="outline" size="icon" aria-label="Search blog posts">
               <Search className="h-4 w-4" />
             </Button>
-          </ClientOnly>
-        </div>
+          </div>
+        </ClientOnly>
       </SidebarWidget>
 
       <SidebarWidget title="Blog Archive">
@@ -76,14 +76,14 @@ export default function RightSidebar() {
       </SidebarWidget>
 
       <SidebarWidget title="Follow by Email">
-        <div className="flex space-x-2">
-          <Input type="email" placeholder="Email address..." className="flex-grow" />
-          <ClientOnly>
+        <ClientOnly>
+          <div className="flex space-x-2">
+            <Input type="email" placeholder="Email address..." className="flex-grow" />
             <Button variant="default">
               <Mail className="h-4 w-4 mr-2" /> Submit
             </Button>
-          </ClientOnly>
-        </div>
+          </div>
+        </ClientOnly>
       </SidebarWidget>
       
       <SidebarWidget title="Subscribe To">
@@ -98,3 +98,4 @@ export default function RightSidebar() {
     </div>
   );
 }
+
