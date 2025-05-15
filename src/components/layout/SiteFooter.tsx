@@ -5,9 +5,6 @@ export default function SiteFooter() {
         <p>
           &copy; {new Date().getFullYear()} GSB Mandal Thane. All Rights Reserved.
         </p>
-        <p className="mt-1">
-          Cloned website for demonstration purposes. Original site: gsbmandalthane.blogspot.com
-        </p>
       </div>
     </footer>
   );
