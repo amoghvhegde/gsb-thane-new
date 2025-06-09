@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Committee Members - GSB Mandal Thane</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo-link">
+                    <img src="https://placehold.co/60x60.png" alt="GSB Mandal Thane Logo" class="logo-img">
+                    <div class="logo-text">
+                        <h1 class="site-title">GSB Mandal Thane</h1>
+                        <p class="site-subtitle">|| श्री गणेशाय नमः || श्री कुलस्वामिनी प्रसन्न ||</p>
+                    </div>
+                </a>
+                
+                <button class="mobile-menu-btn" id="mobileMenuBtn">
+                    <span class="hamburger"></span>
+                    <span class="hamburger"></span>
+                    <span class="hamburger"></span>
+                </button>
+            </div>
+            
+            <nav class="nav" id="navigation">
+                <ul class="nav-list">
+                    <li><a href="index.html" class="nav-link">Home</a></li>
+                    <li><a href="about.html" class="nav-link">About Us</a></li>
+                    <li><a href="committee.html" class="nav-link active">Committee Members</a></li>
+                    <li><a href="events.html" class="nav-link">Events</a></li>
+                    <li><a href="seva.html" class="nav-link">Seva/Pooja Booking</a></li>
+                    <li><a href="membership.html" class="nav-link">Membership</a></li>
+                    <li><a href="contact.html" class="nav-link">Contact Us</a></li>
+                    <li><a href="gallery.html" class="nav-link">Gallery</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <div class="page-content">
+                <div class="page-card">
+                    <header class="page-header">
+                        <h1 class="page-title">Managing Committee of "The Gowd Saraswat Brahmin Mandal Thane" (WEF 13-08-2023)</h1>
+                    </header>
+                    <div class="page-body">
+                        <p class="intro-text">Meet the dedicated managing committee (effective from 13-08-2023). Our committee members are volunteers who dedicate their time and effort to organize events, manage operations, and ensure the smooth functioning of the Mandal.</p>
+                        
+                        <div class="committee-grid" id="committeeGrid">
+                            <!-- Committee members will be loaded here by JavaScript -->
+                        </div>
+                        
+                        <div class="content-section">
+                            <p>Our committee is constituted as per the Mandal's governing rules. We encourage active participation from all members in the Mandal's activities and governance. If you are interested in contributing or have any suggestions, please feel free to reach out to any of the committee members or contact us through the official channels.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 GSB Mandal Thane. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <div id="toast" class="toast"></div>
+    <script src="script.js"></script>
+    <script src="committee.js"></script>
+</body>
+</html>
