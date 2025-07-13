@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import { getDatabase } from '@/lib/db';
 import { z } from 'zod';
 
 const MembershipApplicationSchema = z.object({
@@ -34,50 +34,47 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = MembershipApplicationSchema.parse(body);
     
-    const client = await pool.connect();
+    const db = await getDatabase();
     
-    try {
-      const result = await client.query(`
-        INSERT INTO membership_applications (
-          first_name, middle_name, surname, gender, postal_address, pin_code,
-          mobile_no, email, date_of_birth, occupation, qualification, marital_status,
-          num_children, gotra, kuladevata, math, native_place, other_gsb_institutions,
-          membership_type, introducer_name, declaration
-        )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
-        RETURNING *
-      `, [
-        validatedData.firstName,
-        validatedData.middleName,
-        validatedData.surname,
-        validatedData.gender,
-        validatedData.postalAddress,
-        validatedData.pinCode,
-        validatedData.mobileNo,
-        validatedData.email,
-        validatedData.dateOfBirth,
-        validatedData.occupation,
-        validatedData.qualification,
-        validatedData.maritalStatus,
-        validatedData.numChildren,
-        validatedData.gotra,
-        validatedData.kuladevata,
-        validatedData.math,
-        validatedData.nativePlace,
-        validatedData.otherGSBInstitutions,
-        validatedData.membershipType,
-        validatedData.introducerName,
-        validatedData.declaration
-      ]);
-      
-      return NextResponse.json({ 
-        success: true, 
-        message: "Membership application submitted successfully.",
-        data: result.rows[0] 
-      });
-    } finally {
-      client.release();
-    }
+    const result = await db.run(`
+      INSERT INTO membership_applications (
+        first_name, middle_name, surname, gender, postal_address, pin_code,
+        mobile_no, email, date_of_birth, occupation, qualification, marital_status,
+        num_children, gotra, kuladevata, math, native_place, other_gsb_institutions,
+        membership_type, introducer_name, declaration
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      validatedData.firstName,
+      validatedData.middleName,
+      validatedData.surname,
+      validatedData.gender,
+      validatedData.postalAddress,
+      validatedData.pinCode,
+      validatedData.mobileNo,
+      validatedData.email,
+      validatedData.dateOfBirth,
+      validatedData.occupation,
+      validatedData.qualification,
+      validatedData.maritalStatus,
+      validatedData.numChildren,
+      validatedData.gotra,
+      validatedData.kuladevata,
+      validatedData.math,
+      validatedData.nativePlace,
+      validatedData.otherGSBInstitutions,
+      validatedData.membershipType,
+      validatedData.introducerName,
+      validatedData.declaration ? 1 : 0
+    ]);
+    
+    const newApplication = await db.get('SELECT * FROM membership_applications WHERE id = ?', [result.lastID]);
+    
+    return NextResponse.json({ 
+      success: true, 
+      message: "Membership application submitted successfully.",
+      data: newApplication 
+    });
   } catch (error) {
     console.error('Error submitting membership application:', error);
     

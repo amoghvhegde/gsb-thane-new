@@ -1,21 +1,22 @@
-import { Pool } from 'pg';
+import sqlite3 from 'sqlite3';
+import { open, Database } from 'sqlite';
+import path from 'path';
 
-// Parse connection string manually
-const connectionString = process.env.DATABASE_URL;
-console.log('Connection string:', connectionString ? 'Present' : 'Missing');
+let db: Database | null = null;
 
-const pool = new Pool({
-  connectionString: connectionString,
-  ssl: connectionString?.includes('supabase') ? {
-    rejectUnauthorized: false
-  } : false,
-  connectionTimeoutMillis: 10000,
-  idleTimeoutMillis: 10000
-});
+export async function getDatabase(): Promise<Database> {
+  if (db) {
+    return db;
+  }
 
-// Add error handling
-pool.on('error', (err) => {
-  console.error('Unexpected error on idle client:', err);
-});
+  const dbPath = path.join(process.cwd(), 'gsb_mandal.db');
+  
+  db = await open({
+    filename: dbPath,
+    driver: sqlite3.Database
+  });
 
-export default pool;
+  return db;
+}
+
+export default getDatabase;

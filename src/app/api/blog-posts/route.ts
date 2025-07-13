@@ -1,21 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import { getDatabase } from '@/lib/db';
 
 export async function GET() {
   try {
-    const client = await pool.connect();
+    const db = await getDatabase();
     
-    try {
-      const result = await client.query(`
-        SELECT id, title, date, author, content_html, image_url, image_hint, video_url
-        FROM blog_posts 
-        ORDER BY created_at DESC
-      `);
-      
-      return NextResponse.json({ success: true, data: result.rows });
-    } finally {
-      client.release();
-    }
+    const rows = await db.all(`
+      SELECT id, title, date, author, content_html, image_url, image_hint, video_url
+      FROM blog_posts 
+      ORDER BY created_at DESC
+    `);
+    
+    return NextResponse.json({ success: true, data: rows });
   } catch (error) {
     console.error('Error fetching blog posts:', error);
     return NextResponse.json(
@@ -30,19 +26,16 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { title, date, author, content_html, image_url, image_hint, video_url } = body;
     
-    const client = await pool.connect();
+    const db = await getDatabase();
     
-    try {
-      const result = await client.query(`
-        INSERT INTO blog_posts (title, date, author, content_html, image_url, image_hint, video_url)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-        RETURNING *
-      `, [title, date, author, content_html, image_url, image_hint, video_url]);
-      
-      return NextResponse.json({ success: true, data: result.rows[0] });
-    } finally {
-      client.release();
-    }
+    const result = await db.run(`
+      INSERT INTO blog_posts (title, date, author, content_html, image_url, image_hint, video_url)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `, [title, date, author, content_html, image_url, image_hint, video_url]);
+    
+    const newPost = await db.get('SELECT * FROM blog_posts WHERE id = ?', [result.lastID]);
+    
+    return NextResponse.json({ success: true, data: newPost });
   } catch (error) {
     console.error('Error creating blog post:', error);
     return NextResponse.json(

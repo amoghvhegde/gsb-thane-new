@@ -1,13 +1,13 @@
-import pool from './db';
+import { getDatabase } from './db';
 
 export async function initializeDatabase() {
-  const client = await pool.connect();
+  const db = await getDatabase();
   
   try {
     // Create blog_posts table
-    await client.query(`
+    await db.exec(`
       CREATE TABLE IF NOT EXISTS blog_posts (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         title VARCHAR(255) NOT NULL,
         date VARCHAR(50) NOT NULL,
         author VARCHAR(100) NOT NULL,
@@ -15,32 +15,32 @@ export async function initializeDatabase() {
         image_url VARCHAR(500),
         image_hint VARCHAR(255),
         video_url VARCHAR(500),
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
     // Create seva_bookings table
-    await client.query(`
+    await db.exec(`
       CREATE TABLE IF NOT EXISTS seva_bookings (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         first_name VARCHAR(100) NOT NULL,
         last_name VARCHAR(100) NOT NULL,
         email VARCHAR(255) NOT NULL,
         phone VARCHAR(20) NOT NULL,
         address TEXT NOT NULL,
-        selected_pooja_ids INTEGER[],
+        selected_pooja_ids TEXT, -- JSON string for SQLite
         pan_number VARCHAR(10),
-        donation_amount DECIMAL(10,2) DEFAULT 0,
-        total_pooja_price DECIMAL(10,2) NOT NULL,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        donation_amount REAL DEFAULT 0,
+        total_pooja_price REAL NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
     // Create membership_applications table
-    await client.query(`
+    await db.exec(`
       CREATE TABLE IF NOT EXISTS membership_applications (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         first_name VARCHAR(100) NOT NULL,
         middle_name VARCHAR(100),
         surname VARCHAR(100) NOT NULL,
@@ -61,34 +61,43 @@ export async function initializeDatabase() {
         other_gsb_institutions TEXT,
         membership_type VARCHAR(20) NOT NULL,
         introducer_name VARCHAR(100),
-        declaration BOOLEAN NOT NULL DEFAULT false,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        declaration BOOLEAN NOT NULL DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
     console.log('Database tables created successfully');
     
     // Insert sample blog posts if table is empty
-    const result = await client.query('SELECT COUNT(*) FROM blog_posts');
-    if (parseInt(result.rows[0].count) === 0) {
-      await client.query(`
-        INSERT INTO blog_posts (title, date, author, content_html, image_url, image_hint, video_url) VALUES
-        ($1, $2, $3, $4, $5, $6, $7),
-        ($8, $9, $10, $11, null, null, $12),
-        ($13, $14, $15, $16, $17, $18, null)
+    const result = await db.get('SELECT COUNT(*) as count FROM blog_posts');
+    if (result.count === 0) {
+      await db.run(`
+        INSERT INTO blog_posts (title, date, author, content_html, image_url, image_hint) VALUES
+        (?, ?, ?, ?, ?, ?)
       `, [
         'GSB Mandal Thane - Annual General Meeting 2023',
         'October 28, 2023',
         'GSB Mandal Thane',
         '<p>The Annual General Meeting (AGM) of GSB Mandal Thane was held on <strong>Sunday, 22nd October 2023</strong>. We thank all members for their active participation and valuable suggestions.</p><p>Key discussions included a review of the past year\'s activities, financial reporting, and planning for upcoming events. The committee expressed gratitude for the community\'s continued support.</p><p>Further details and minutes of the meeting will be shared with members via email shortly.</p>',
         'https://placehold.co/600x400.png',
-        'meeting community',
-        null,
+        'meeting community'
+      ]);
+
+      await db.run(`
+        INSERT INTO blog_posts (title, date, author, content_html, video_url) VALUES
+        (?, ?, ?, ?, ?)
+      `, [
         'Successful Ganesh Chaturthi Celebrations 2023',
         'September 30, 2023',
         'GSB Mandal Thane',
         '<p>We are delighted to share the success of our Ganesh Chaturthi celebrations for 2023. The event saw enthusiastic participation from the community, with various cultural programs and traditional rituals.</p><p>The Mandal extends its heartfelt thanks to all volunteers, donors, and attendees who made this event a grand success. Your contributions and support are invaluable.</p><p>Here\'s a glimpse of the festivities:</p>',
-        'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        'https://www.youtube.com/embed/dQw4w9WgXcQ'
+      ]);
+
+      await db.run(`
+        INSERT INTO blog_posts (title, date, author, content_html, image_url, image_hint) VALUES
+        (?, ?, ?, ?, ?, ?)
+      `, [
         'Upcoming Kojagiri Pournima Event',
         'September 15, 2023',
         'GSB Mandal Thane',
@@ -96,19 +105,20 @@ export async function initializeDatabase() {
         'https://placehold.co/600x400.png',
         'festival celebration'
       ]);
+      
       console.log('Sample blog posts inserted');
     }
     
-  } finally {
-    client.release();
+  } catch (error) {
+    console.error('Error initializing database:', error);
+    throw error;
   }
 }
 
 export async function testConnection() {
   try {
-    const client = await pool.connect();
-    await client.query('SELECT NOW()');
-    client.release();
+    const db = await getDatabase();
+    await db.get('SELECT datetime("now") as current_time');
     console.log('Database connection successful');
     return true;
   } catch (error) {

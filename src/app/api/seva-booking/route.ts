@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import { getDatabase } from '@/lib/db';
 import { z } from 'zod';
 
 const SevaBookingSchema = z.object({
@@ -21,36 +21,33 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = SevaBookingSchema.parse(body);
     
-    const client = await pool.connect();
+    const db = await getDatabase();
     
-    try {
-      const result = await client.query(`
-        INSERT INTO seva_bookings (
-          first_name, last_name, email, phone, address, 
-          selected_pooja_ids, pan_number, donation_amount, total_pooja_price
-        )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        RETURNING *
-      `, [
-        validatedData.firstName,
-        validatedData.lastName,
-        validatedData.email,
-        validatedData.phone,
-        validatedData.address,
-        validatedData.selectedPoojaIds,
-        validatedData.panNumber,
-        validatedData.donationAmount || 0,
-        validatedData.totalPoojaPrice
-      ]);
-      
-      return NextResponse.json({ 
-        success: true, 
-        message: "Seva booking submitted successfully.",
-        data: result.rows[0] 
-      });
-    } finally {
-      client.release();
-    }
+    const result = await db.run(`
+      INSERT INTO seva_bookings (
+        first_name, last_name, email, phone, address, 
+        selected_pooja_ids, pan_number, donation_amount, total_pooja_price
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      validatedData.firstName,
+      validatedData.lastName,
+      validatedData.email,
+      validatedData.phone,
+      validatedData.address,
+      JSON.stringify(validatedData.selectedPoojaIds), // Store as JSON string
+      validatedData.panNumber,
+      validatedData.donationAmount || 0,
+      validatedData.totalPoojaPrice
+    ]);
+    
+    const newBooking = await db.get('SELECT * FROM seva_bookings WHERE id = ?', [result.lastID]);
+    
+    return NextResponse.json({ 
+      success: true, 
+      message: "Seva booking submitted successfully.",
+      data: newBooking 
+    });
   } catch (error) {
     console.error('Error submitting seva booking:', error);
     
