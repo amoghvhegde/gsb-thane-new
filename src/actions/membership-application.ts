@@ -1,4 +1,3 @@
-
 'use server';
 
 import { z } from 'zod';
@@ -31,7 +30,6 @@ const MembershipApplicationSchema = z.object({
   path: ["numChildren"],
 });
 
-
 export type MembershipApplicationData = z.infer<typeof MembershipApplicationSchema>;
 
 interface SubmissionResult {
@@ -47,19 +45,23 @@ export async function submitMembershipApplication(data: MembershipApplicationDat
 
     console.log("Membership Application Data Received:", validatedData);
 
-    // TODO: Implement database interaction here
-    // Example: await db.collection('membershipApplications').add(validatedData);
-    // For now, we'll simulate a successful submission.
+    // Call the API endpoint to save to database
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:9002'}/api/membership-application`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(validatedData),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      return { success: false, message: result.message || 'Failed to submit membership application' };
+    }
+
+    return result;
     
-    // Simulate some processing delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    return { 
-      success: true, 
-      message: "Membership application submitted successfully.",
-      data: validatedData 
-    };
-
   } catch (error) {
     console.error("Error submitting membership application:", error);
     if (error instanceof z.ZodError) {

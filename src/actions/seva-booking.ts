@@ -1,4 +1,3 @@
-
 'use server';
 
 import { z } from 'zod';
@@ -33,18 +32,22 @@ export async function submitSevaBooking(data: SevaBookingData): Promise<Submissi
 
     console.log("Seva Booking Data Received:", validatedData);
 
-    // TODO: Implement database interaction here
-    // Example: await db.collection('sevaBookings').add(validatedData);
-    // For now, we'll simulate a successful submission.
+    // Call the API endpoint to save to database
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:9002'}/api/seva-booking`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(validatedData),
+    });
 
-    // Simulate some processing delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const result = await response.json();
 
-    return { 
-      success: true, 
-      message: "Seva booking submitted successfully.",
-      data: validatedData 
-    };
+    if (!response.ok) {
+      return { success: false, message: result.message || 'Failed to submit seva booking' };
+    }
+
+    return result;
 
   } catch (error) {
     console.error("Error submitting seva booking:", error);
